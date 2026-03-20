@@ -1,66 +1,67 @@
 import os
-import cv2
 import time
-import threading
-import whisper
+import zmq
 import pyttsx3
-import face_recognition
+import threading
+import requests
 from dotenv import load_dotenv
-from aether_mesh import AetherMeshNode
 
 load_dotenv()
 ADMIN_NAME = os.getenv("ADMIN_NAME", "Inan")
-WRAITH_PORT = 5556
+CHIMERA_URL = f"http://localhost:{os.getenv('CHIMERA_PORT', '7870')}/v1/chat/completions"
 
-class SeraphPersonalSwarmV10:
+class SeraphPersonalSwarmV11:
     """
-    Project SERAPH V10: The Ascended Companion.
-    Integrates Whisper STT, Face Recognition, and Coqui TTS.
+    Project SERAPH V11: Ascended Conversational Companion.
+    - ZeroMQ Bridge for Voice Input (via Browser)
+    - High-Fidelity XTTS (Simulated) / TTS Output
+    - Persistent conversational context
     """
     def __init__(self):
         # Voice Engine
         self.engine = pyttsx3.init()
-        # Vision Core (Face Recognition)
-        self.known_face_encoding = self._load_admin_face()
-        # Audio Core (Whisper)
-        self.whisper_model = whisper.load_model("base")
+        voices = self.engine.getProperty('voices')
+        if len(voices) > 1: self.engine.setProperty('voice', voices[1].id)
+        self.engine.setProperty('rate', 175)
+        
+        # ZMQ Input Socket (Receives text from browser bridge)
+        self.context = zmq.Context()
+        self.socket = self.context.socket(zmq.PULL)
+        self.socket.connect("tcp://127.0.0.1:5559")
         
         self.active_session = True
-        self.mesh_node = AetherMeshNode("SERAPH_COMPANION", 5558)
-        print(f"⚡ SERAPH V10: Ascended Persona Online. Recognizing {ADMIN_NAME}...")
+        print(f"⚡ SERAPH V11: Ascended Persona Online.")
 
-    def _load_admin_face(self):
-        """Generates biometric encoding for presence verification."""
-        # Mock load: In practice, this would load a reference image
-        return [0.1] * 128 
+    def speak(self, text):
+        print(f"[SERAPH VOICE] -> {text}")
+        self.engine.say(text)
+        self.engine.runAndWait()
 
-    def listen_and_transcribe(self):
-        """Whisper-STT Integration: Local speech recognition."""
-        print("🎙️ [SERAPH EARS] Whisper-STT Active.")
+    def conversation_loop(self):
+        """Listens for ZMQ stream."""
+        print("🎙️ [SERAPH EARS] Listening to Browser Bridge...")
         while self.active_session:
-            # Simulate real-time audio capture and Whisper inference
-            time.sleep(5) 
-            # transcript = whisper.transcribe(...)
-            # self.mesh_node.send_secure_packet(WRAITH_PORT, {"msg": transcript})
-            pass
-
-    def run_presence_check(self):
-        """Biometric Presence: High-fidelity face recognition."""
-        cap = cv2.VideoCapture(0)
-        while self.active_session:
-            ret, frame = cap.read()
-            if ret:
-                # Run face encoding and compare against self.known_face_encoding
-                pass
-            time.sleep(5)
-        cap.release()
+            try:
+                transcript = self.socket.recv_string()
+                print(f"   [Processing] -> {transcript}")
+                
+                # Route to CHIMERA V6+ for LLM processing
+                response = requests.post(CHIMERA_URL, json={"user_id": ADMIN_NAME, "message": transcript})
+                data = response.json()
+                
+                self.speak(data.get("response", "I have processed that request."))
+            except Exception as e:
+                print(f"[Error] Bridge loop failure: {e}")
+                time.sleep(1)
 
     def start(self):
-        print("🚀 SERAPH V10 Initialized. All systems nominal.")
-        threading.Thread(target=self.listen_loop, daemon=True).start()
-        threading.Thread(target=self.run_presence_check, daemon=True).start()
+        self.speak("Ascension complete. I am listening via the neural socket.")
+        threading.Thread(target=self.conversation_loop, daemon=True).start()
         
         try:
             while self.active_session: time.sleep(1)
         except KeyboardInterrupt:
             self.active_session = False
+
+if __name__ == "__main__":
+    SeraphPersonalSwarmV11().start()
