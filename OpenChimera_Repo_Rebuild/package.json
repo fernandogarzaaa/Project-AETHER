@@ -1,0 +1,16 @@
+{
+  "name": "openchimera",
+  "version": "1.0.0",
+  "description": "Autonomous local swarm LLM orchestrator for NVIDIA RTX environments.",
+  "main": "chimera_ultimate.py",
+  "dependencies": {
+    "fastapi": "latest",
+    "uvicorn": "latest",
+    "requests": "latest",
+    "torch": "latest",
+    "transformers": "latest"
+  },
+  "scripts": {
+    "start": "python chimera_ultimate.py"
+  }
+}

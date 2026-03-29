@@ -1,0 +1,13 @@
+[project]
+name = "openchimera"
+version = "1.0.0"
+description = "Autonomous local swarm LLM orchestrator."
+dependencies = [
+    "fastapi",
+    "uvicorn",
+    "requests",
+    "torch",
+    "transformers",
+    "python-dotenv",
+    "pydantic"
+]
