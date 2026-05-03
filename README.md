@@ -11,10 +11,10 @@ This repo is a polyglot workspace. The two primary stacks:
 **Python (CHIMERA, swarm, RAG, agents)**
 
 ```bash
-pip install -r requirements.txt
+pip install fastapi uvicorn pydantic requests qwen-agent
 ```
 
-Some submodules (`token_fracture`, `swarm_v2`, `smart_router`, `quantum_consensus_v2`, `simple_rag`, `qwen-agent`) are local packages — install them from their own folders if not already on `PYTHONPATH`.
+> ⚠️ `requirements.txt` is currently **broken**: it lists `token_fracture`, `swarm_v2`, `smart_router`, `quantum_consensus_v2`, and `simple_rag` as dependencies, but these are **single-file local modules at the repo root** (`token_fracture.py`, `swarm_v2.py`, etc.), not packages on PyPI. Running `pip install -r requirements.txt` will either fail or pull unrelated PyPI packages with the same names — do not run it as-is. Until the requirements file is fixed, install the third-party deps directly (as above) and run the local modules from the repo root so Python can import them.
 
 **Node / Playwright (e2e tests)**
 
